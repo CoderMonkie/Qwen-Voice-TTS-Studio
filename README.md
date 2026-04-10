@@ -63,6 +63,30 @@ Run:
 
 **Not tested on Linux**. Please provide a PR if something breaks.
 
+## Quick Start (macOS)
+
+Recommended for macOS users (including default `zsh` shell):
+
+1. Ensure Python `3.10+` is installed (`3.12` recommended).
+2. Install SoX:
+   - `brew install sox`
+3. Make scripts executable:
+   - `chmod +x 01Setup.macos.sh 02Start.macos.sh`
+4. Run setup:
+   - `./01Setup.macos.sh`
+5. Start app:
+   - `./02Start.macos.sh`
+
+Notes:
+
+- `flash-attn` is skipped on macOS.
+- Render runs on CPU (and can use MPS through PyTorch availability).
+- Models can be downloaded during setup or auto-downloaded on first use.
+- You can choose model source in setup:
+  - HuggingFace (default)
+  - ModelScope (`QWEN_MODEL_SOURCE=modelscope`)
+- ASR model download in UI also follows `QWEN_MODEL_SOURCE`.
+
 ## Features
 
 ### Text-to-Speech

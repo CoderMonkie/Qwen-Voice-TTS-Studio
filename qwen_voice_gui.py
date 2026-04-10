@@ -351,29 +351,58 @@ class QwenVoiceGUI:
 
         return self.get_system_info_markdown()
 
+    def _get_model_source(self) -> str:
+        source = (os.environ.get("QWEN_MODEL_SOURCE") or "hf").strip().lower()
+        if source in ("ms", "modelscope"):
+            return "modelscope"
+        return "hf"
+
+    def _snapshot_download(self, repo_id: str, local_dir: Path):
+        source = self._get_model_source()
+        local_dir_str = str(local_dir)
+
+        if source == "modelscope":
+            from modelscope.hub.snapshot_download import (
+                snapshot_download as ms_snapshot_download,
+            )
+            try:
+                return ms_snapshot_download(
+                    model_id=repo_id,
+                    local_dir=local_dir_str,
+                )
+            except TypeError:
+                return ms_snapshot_download(
+                    model_id=repo_id,
+                    cache_dir=local_dir_str,
+                )
+
+        from huggingface_hub import snapshot_download as hf_snapshot_download
+        return hf_snapshot_download(
+            repo_id=repo_id,
+            local_dir=local_dir_str,
+            local_dir_use_symlinks=False,
+        )
+
     def download_asr_models(self, download_forced_aligner: bool = False):
         try:
-            from huggingface_hub import snapshot_download
-
             self.models_dir.mkdir(exist_ok=True)
             asr_local_dir = self.models_dir / "Qwen3-ASR-1.7B"
-            snapshot_download(
+            self._snapshot_download(
                 repo_id="Qwen/Qwen3-ASR-1.7B",
-                local_dir=str(asr_local_dir),
-                local_dir_use_symlinks=False,
+                local_dir=asr_local_dir,
             )
 
             if download_forced_aligner:
                 aligner_local_dir = self.models_dir / "Qwen3-ForcedAligner-0.6B"
-                snapshot_download(
+                self._snapshot_download(
                     repo_id="Qwen/Qwen3-ForcedAligner-0.6B",
-                    local_dir=str(aligner_local_dir),
-                    local_dir_use_symlinks=False,
+                    local_dir=aligner_local_dir,
                 )
 
             self.asr_model = None
             self.asr_model_id = None
-            return "✓ ASR model(s) downloaded to ./models"
+            source = self._get_model_source()
+            return f"✓ ASR model(s) downloaded to ./models via {source}"
         except Exception as e:
             return f"✗ Error downloading ASR model(s): {str(e)}"
 
